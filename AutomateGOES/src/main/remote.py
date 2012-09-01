@@ -31,7 +31,7 @@ class HttpDownload:
     except:
       return False
 
-  def wget(self,url, todir, outputFileName = None):
+  def wget(self,url, todir, outputFileName = ''):
     """
     Downloads a remote object to a local directory
     
@@ -40,7 +40,7 @@ class HttpDownload:
     
     wget -> (filename, headers)
     """
-    if outputFileName is None:
+    if outputFileName == '':
       outputFileName = url.split('/')[-1]
       
     path = os.path.join(todir,outputFileName)
@@ -86,7 +86,13 @@ class FtpMeta:
   
 
 class FtpUpload:
-  def __init__(self, ftpMeta, filesDict):
+  """
+  Class used to upload files into an ftpserver
+  
+  FtpUpload(ftpMeta) -> Creates an object of this class and creates the ftp connection
+                        from the ftpMeta object
+  """
+  def __init__(self, ftpMeta):
     self.ftpMeta = ftpMeta
     self.__constructFtp()
     
@@ -99,12 +105,14 @@ class FtpUpload:
     self.ftp = FTP()
     self.ftp.connect(m.getHost(),m.getPort())
     self.ftp.login(m.getUser(), m.getPassword())
+    
+    print self.ftp.pwd()
         
   def close(self):
     """
     Closes the connection
     """
-    self.ftp.quit()
+    self.ftp.close()
 
   def wput(self,remoteDir, filenamesTuple):
     """
@@ -114,10 +122,13 @@ class FtpUpload:
     filenamesTuple - List of tuples of the form
                     [(remotefilename,localfilename),...]
     """
-    self.ftp.cwd(remoteDir)
+    if remoteDir != '':
+      self.ftp.cwd(remoteDir)
+    logger.info("CWD:"+remoteDir)
     
     for remotefilename, localfilename in filenamesTuple:
       self.ftp.storbinary("STOR "+remotefilename,localfilename)
+      logger.info("Stored "+remotefilename)
       
   def dirExists(self, remoteDir):
     """
@@ -139,8 +150,25 @@ class FtpUpload:
       return True
 
 
-    
+if __name__ == "__main__":
+  import os
+  os.chdir("C:\\Users\\TheZen\\Documents\\academic.uprm.edu\\hdc")
+  print os.listdir(os.getcwd())
+  ftpMeta = FtpMeta("hydroclimate.ece.uprm.edu", "victorj", "eiqu9O")
+  upload = FtpUpload(ftpMeta)
+  file = "logo.jpg"
+  files = [(file,open(file,'rb'))]
+  upload.wput("", files)
 
+  
+  
+  print 'done'
+  
+  
+  
+  
+
+  
  
   
 
