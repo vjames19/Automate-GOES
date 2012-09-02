@@ -91,6 +91,7 @@ class GoesDownloader:
   SECONDS ='seconds'
   DOWNLOADS = 'downloads'
   OUTPUT_NAME='outputname'
+  FIND_ITERATING ='finditerating'
   def __init__(self, downloadConfig, date, todir=''):
     self.wget = remote.WebDownload
     self.__initializeProps(downloadConfig)
@@ -133,6 +134,8 @@ class GoesDownloader:
             continue
         else:
           log.error("Remote Directory doesn't exists: "+remotedir)
+      if download[self.FIND_ITERATING]:
+        remoteName = waitToAppear(self.tries,self.seconds, self.findIterating, )
           
       #Create the absolute url      
       absoluteUrl = urlparse.urljoin(remotedir,remoteName)
@@ -157,7 +160,28 @@ class GoesDownloader:
     '''
     Formats the given string with the specified date
     '''
-    return date.strftime(string)     
+    return date.strftime(string)
+  def findIterating(self,remotedir,remoteName, starting_number=0):
+    """
+    Finds the file by trying a different number of combinations.
+    Since the last 2 numbers change and until now are in the range from 0 to 60, 
+    it will iterate until it finds the correct one
+    
+    returns: the complete path path
+    """
+
+    absoluteUrl = urlparse.urljoin(remotedir,remoteName)
+    number = starting_number
+    
+    while number <= 60:        
+      print 'Trying: '+absoluteUrl +str(number)
+      if self.wget.check_url(absoluteUrl + str(number)):
+        slash = absoluteUrl.rindex('/')
+        return absoluteUrl[slash+1:] +str(number)
+      else:
+        number+=1
+
+    return None
 
   
 class GoesLinkParser:
@@ -180,7 +204,7 @@ class GoesLinkParser:
       if match:
         link = match.group(1)
         log.debug("Found a link: "+link)
-        if re.search(target,link):
+        if re.search(self.target,link):
           log.info("Found the target")
           return link
     
