@@ -10,7 +10,7 @@ import urlparse
 import time
 import re
 import urllib2
-log= logging.getLogger("automategoes")
+log= logging.getLogger("main.automategoes")
 
 class PropertiesJson(dict):
   def __init__(self,filename):
@@ -45,6 +45,11 @@ class LoggerProperties(PropertiesJson):
         filehandler['filename'] = filename
         
 class AutomateGoesProperties(PropertiesJson):
+  '''
+  AutomateGoesProperties has methods for getting the 
+  different properties pertinent to the project, once it loads
+  the configuration file
+  '''
   def __init__(self,filename):
     PropertiesJson.__init__(self, filename)
   
@@ -79,7 +84,7 @@ class GoesDownloader:
     remotename - name of the file in the web
     outputname - name for the downloaded file
     dirurl - parent dir of the file
-    regex - true or false if regex must be used looking in the directory
+    finditerating - true or false if the file must be found changing the last two digits
     dateoffset - offset from the date specified when constructing this object
   '''
   DIR_URL = 'dirurl'
@@ -93,7 +98,7 @@ class GoesDownloader:
   OUTPUT_NAME='outputname'
   FIND_ITERATING ='finditerating'
   def __init__(self, downloadConfig, date, todir=''):
-    self.wget = remote.WebDownload
+    self.wget = remote.WebDownload()
     self.__initializeProps(downloadConfig)
     self.date = date
     self.todir = todir
@@ -113,7 +118,7 @@ class GoesDownloader:
     for download in self.downloads:
       log.info("Starting download process for: "+ download[self.NAME])
       tempDate = self.date + datetime.timedelta(download[self.DATE_OFFSET])
-      log.info("Date: "+tempDate)
+      log.info("Date: "+str(tempDate))
       
       #Format the strings using the corresponding date
       remotedir = self.__formatString(download[self.DIR_URL], tempDate)
@@ -122,20 +127,20 @@ class GoesDownloader:
       remoteName = self.__formatString(download[self.REMOTE_NAME], tempDate)
       
       #Process regex looking in the web directory for the remote name
-      if download[self.REGEX]:
-        
-        if self.wget.check_url(remotedir):
-          
-          remoteName = waitToAppear(self.tries, self.seconds, self.__processRegex,remotedir, remoteName)
-          if remoteName:
-            log.info("Found the target: "+remoteName)
-          else:
-            log.error("Couldn't find a link for: "+download[self.NAME])
-            continue
-        else:
-          log.error("Remote Directory doesn't exists: "+remotedir)
+#      if download[self.REGEX]:
+#        
+#        if self.wget.check_url(remotedir):
+#          
+#          remoteName = waitToAppear(self.tries, self.seconds, self.__processRegex,remotedir, remoteName)
+#          if remoteName:
+#            log.info("Found the target: "+remoteName)
+#          else:
+#            log.error("Couldn't find a link for: "+download[self.NAME])
+#            continue
+#        else:
+#          log.error("Remote Directory doesn't exists: "+remotedir)
       if download[self.FIND_ITERATING]:
-        remoteName = waitToAppear(self.tries,self.seconds, self.findIterating, )
+        remoteName = waitToAppear(self.tries,self.seconds, self.findIterating,remotedir,remoteName )
           
       #Create the absolute url      
       absoluteUrl = urlparse.urljoin(remotedir,remoteName)
@@ -146,9 +151,10 @@ class GoesDownloader:
         log.info("Downloading...")
         outputname = self.__formatString(download[self.OUTPUT_NAME], self.date)
         result = self.wget.wget(absoluteUrl, self.todir,outputname)
-        log.info("Downloaded: "+ result)
+        log.info("Downloaded: "+ str(result))
       else:
         log.error("Download error the url doesn't exists")
+        continue
         
   def __initializeProps(self, downloadConfig):
     #initializes the downloads list
@@ -161,7 +167,7 @@ class GoesDownloader:
     Formats the given string with the specified date
     '''
     return date.strftime(string)
-  def findIterating(self,remotedir,remoteName, starting_number=0):
+  def findIterating(self,remotedir,remoteName, starting_number=49):
     """
     Finds the file by trying a different number of combinations.
     Since the last 2 numbers change and until now are in the range from 0 to 60, 
@@ -174,13 +180,14 @@ class GoesDownloader:
     number = starting_number
     
     while number <= 60:        
-      print 'Trying: '+absoluteUrl +str(number)
-      if self.wget.check_url(absoluteUrl + str(number)):
-        slash = absoluteUrl.rindex('/')
-        return absoluteUrl[slash+1:] +str(number)
+      tempUrl =absoluteUrl +'%.2d'%number
+      log.debug('Trying: '+tempUrl)
+      if self.wget.check_url(tempUrl):
+        slash = tempUrl.rindex('/')
+        return tempUrl[slash+1:]
       else:
         number+=1
-
+    log.warning("Coudn't find a link")
     return None
 
   
@@ -221,12 +228,13 @@ def waitToAppear(tries, seconds, conditional, *conditionalArgs):
   Returns whatever the conditional returns when its true, false if the number of tries >= tries 
   '''
   i =0
-  while i < tries:
+  while i <=tries:
     result = conditional(*conditionalArgs)
     if result:
       return result
     else:
       time.sleep(seconds)
+      i+=1
   return False
     
 
@@ -234,6 +242,9 @@ if __name__ == '__main__':
   import json
   logprops = LoggerProperties('log.cfg')
   print json.dumps(logprops, indent = 4)
+  import logging.config as lc
+  lc.dictConfig(logprops)
+  log.info('configured the logger')
 
   goesprops = PropertiesJson('automategoes.cfg')
   print json.dumps(goesprops, indent = 4)
