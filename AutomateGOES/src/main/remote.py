@@ -11,10 +11,10 @@ import logging
 from ftplib import FTP
 
 #setup handler
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('main.remote')
 logger.addHandler(logging.NullHandler())
 
-class HttpDownload:
+class WebDownload:
   """
   Represents a download through HTTP
   """
@@ -46,6 +46,12 @@ class HttpDownload:
     path = os.path.join(todir,outputFileName)
     logger.info("url:%s targetDir:%s" % (url,path))
     return urllib.urlretrieve(url,path)
+  
+  def urlopen(self, url):
+    """
+    Returns a file like object to read from
+    """
+    return urllib2.urlopen(url)
   
 
 class FtpMeta:
@@ -106,7 +112,7 @@ class FtpUpload:
     self.ftp.connect(m.getHost(),m.getPort())
     self.ftp.login(m.getUser(), m.getPassword())
     
-    print self.ftp.pwd()
+ 
         
   def close(self):
     """
@@ -148,17 +154,35 @@ class FtpUpload:
       return False
     except:
       return True
+  
+  def currentDir(self):
+    return self.pwd()
 
 
 if __name__ == "__main__":
-  import os
+  import json, logging.config as lc
+  print os.getcwd()
+  
+  
+  config = json.load(open('log.cfg','r'))
+  print config
+  lc.dictConfig(config)
+  
+  log = logging.getLogger()
+  log.info('loaded the configuration')
+  print log.handlers
+  
   os.chdir("C:\\Users\\TheZen\\Documents\\academic.uprm.edu\\hdc")
-  print os.listdir(os.getcwd())
+  log.error(os.listdir(os.getcwd()))
   ftpMeta = FtpMeta("hydroclimate.ece.uprm.edu", "victorj", "eiqu9O")
   upload = FtpUpload(ftpMeta)
   file = "logo.jpg"
   files = [(file,open(file,'rb'))]
   upload.wput("", files)
+  log.debug("debugging message")
+  
+  upload.close()
+  
 
   
   
