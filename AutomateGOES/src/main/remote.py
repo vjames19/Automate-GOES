@@ -133,7 +133,7 @@ class FtpUpload:
     logger.info("CWD:"+remoteDir)
     
     for remotefilename, localfilename in filenamesTuple:
-      self.ftp.storbinary("STOR "+remotefilename,localfilename)
+      self.ftp.storbinary("STOR "+remotefilename,open(localfilename,'rb'))
       logger.info("Stored "+remotefilename)
       
   def dirExists(self, remoteDir):
@@ -157,6 +157,8 @@ class FtpUpload:
   
   def currentDir(self):
     return self.pwd()
+  def changeDir(self,dirname):
+    self.ftp.cwd(dirname)
 
 
 if __name__ == "__main__":

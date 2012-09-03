@@ -10,8 +10,9 @@ import urlparse
 import time
 import re
 import urllib2
-from main.remote import FtpMeta
+import main.remote
 import main.properties
+from main.remote import FtpMeta, FtpUpload
 log= logging.getLogger("main.automategoes")
 
 class PropertiesJson(dict):
@@ -186,8 +187,48 @@ class GoesDownloader:
   
 
 class GoesUploader:
-  def __init__(self, ftpConfig):
-    pass
+  def __init__(self, ftpProps):
+    f = ftpProps
+    self.ftpmeta = FtpMeta(f.get_host(), f.get_user(), f.get_password(), f.get_port())
+    self.ftp = FtpUpload(self.ftpmeta)
+    self.rootdir = f.get_rootdir()
+    
+  def upload(self,pattern, directory, variable):
+    """ 
+    pattern: if you want to upload more than one file use wildcards
+                else just give the file name
+    
+    directory: location of the file to be uploaded
+    
+    variable: variable to upload to. Ex: 'WIND', 'SOLAR' and 'PRECIPITATION'
+    """
+    
+    uploads = self.findFiles(pattern, directory)
+    
+    if self.ftp.isClosed():
+      self.ftp = FtpUpload(self.ftpmeta)
+    
+    remotedir = urlparse.urljoin(self.rootdir, variable)
+    self.ftp.wput(remotedir, uploads)    
+
+
+      
+  def findFiles(self, pattern, directory):     
+    import glob
+    
+    ls = glob.glob(directory + pattern)
+    logging.info("Found files: "+ str(ls))
+    
+    uploads = []   
+    for filename in ls:
+      remotename= filename
+      if '\\' in filename:
+        lastslash = filename.rindex('\\')
+        remotename = filename[lastslash+1:]
+          
+      uploads.append((remotename,filename))          
+    return uploads
+    
 
   
 class GoesLinkParser:
