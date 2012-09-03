@@ -106,11 +106,11 @@ class PropertiesManager(object):
     return self.variables
 
 class DownloadProps(object):
-  def __init__(self,props):
+  def __init__(self,downloadprops):
     self.downloads = []
-    self.decodeDownloads(props['downloads'])
-    self.tries = props['tries']
-    self.seconds = props['seconds']
+    self.decodeDownloads(downloadprops['downloads'])
+    self.tries = downloadprops['tries']
+    self.seconds = downloadprops['seconds']
 
   def get_downloads(self):
     return self.downloads
@@ -141,10 +141,10 @@ class DownloadProps(object):
 
       
 class FinishedProps(object):
-  def __init__(self,props):
-    self.filename = props['filename']
-    self.tries = props['tries']
-    self.seconds = props['seconds']
+  def __init__(self,downloadprops):
+    self.filename = downloadprops['filename']
+    self.tries = downloadprops['tries']
+    self.seconds = downloadprops['seconds']
 
   def get_filename(self):
     return self.filename
@@ -171,10 +171,10 @@ class FinishedProps(object):
 
 
 class EmailProps(object):
-  def __init__(self, props):
-    self.fromaddress = props['from']
-    self.to = props ['to']
-    self.password = props['password']
+  def __init__(self, downloadprops):
+    self.fromaddress = downloadprops['from']
+    self.to = downloadprops ['to']
+    self.password = downloadprops['password']
 
   def get_from(self):
     return self.fromaddress
@@ -202,13 +202,13 @@ class EmailProps(object):
        
   
 class DownloadMeta(object):
-  def __init__(self, props):
-    self.name = props['name']
-    self.remotename = props['remotename']
-    self.outputname = props['outputname']
-    self.remotedir = props['remotedir']
-    self.finditerating = props['finditerating']
-    self.dateoffset = props['dateoffset']
+  def __init__(self, downloadprops):
+    self.name = downloadprops['name']
+    self.remotename = downloadprops['remotename']
+    self.outputname = downloadprops['outputname']
+    self.remotedir = downloadprops['remotedir']
+    self.finditerating = downloadprops['finditerating']
+    self.dateoffset = downloadprops['dateoffset']
 
   def get_dateoffset(self):
     return self.dateoffset
@@ -229,8 +229,8 @@ class DownloadMeta(object):
     return self.outputname
 
 
-  def get_remotdir(self):
-    return self.remotdir
+  def get_remotedir(self):
+    return self.remotedir
 
 
   def get_finditerating(self):
@@ -249,8 +249,8 @@ class DownloadMeta(object):
     self.outputname = value
 
 
-  def set_remotdir(self, value):
-    self.remotdir = value
+  def set_remotedir(self, value):
+    self.remotedir = value
 
 
   def set_finditerating(self, value):
@@ -281,9 +281,9 @@ class DegribVariable(object):
     
 
 class DegribProps(object):
-  def __init__(self, props):
+  def __init__(self, downloadprops):
     self.variables = []
-    self.decodeVariables(props['variables'])
+    self.decodeVariables(downloadprops['variables'])
 
   def get_variables(self):
     return self.variables
@@ -299,12 +299,12 @@ class DegribProps(object):
       
 
 class FtpProps(object):
-  def __init__(self, props):
-    self.host = props['host']
-    self.user= props['user']
-    self.password = props['password']
-    self.port = props['port']
-    self.rootdir = props['rootdir']
+  def __init__(self, downloadprops):
+    self.host = downloadprops['host']
+    self.user= downloadprops['user']
+    self.password = downloadprops['password']
+    self.port = downloadprops['port']
+    self.rootdir = downloadprops['rootdir']
 
   def get_host(self):
     return self.host

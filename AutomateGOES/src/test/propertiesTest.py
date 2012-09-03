@@ -6,14 +6,12 @@ Created on Sep 2, 2012
 import datetime
 import logging
 import logging.config
-import main.properties as p
-import os
 import unittest
 import urllib2
 from main.properties import *
 from main.automategoes import GoesLinkParser
 
-logconfig = p.LoggerProperties('log.cfg')
+logconfig = LoggerProperties('log.cfg')
 logging.config.dictConfig(logconfig)
 
 
@@ -21,7 +19,7 @@ class TestGoesProperties(unittest.TestCase):
 
     filename = 'automategoes.cfg'
     def setUp(self):
-        self.properties = p.AutomateGoesProperties(self.filename)
+        self.properties = AutomateGoesProperties(self.filename)
 
 
     def tearDown(self):
@@ -44,7 +42,7 @@ class TestLoggerProperties(unittest.TestCase):
   filename = 'log.cfg'
 
   def setUp(self):
-    self.props = p.LoggerProperties(self.filename)
+    self.props = LoggerProperties(self.filename)
 
   def tearDown(self):
     self.props.clear()
@@ -64,7 +62,7 @@ class TestPropertiesJson(unittest.TestCase):
   
   filename = 'automategoes.cfg'
   def setUp(self):
-    self.props = p.PropertiesJson(self.filename)
+    self.props = PropertiesJson(self.filename)
   
   def testIsDict(self):
     props = self.props

@@ -5,15 +5,20 @@ Created on Sep 3, 2012
 '''
 import unittest
 import os
-import main.automategoes as p
+import logging.config
+from main.properties import *
+from main.automategoes import GoesDownloader
 import datetime
+
+logconfig = LoggerProperties('log.cfg')
+logging.config.dictConfig(logconfig)
 
 
 class TestGoesDownloader(unittest.TestCase):
   filename = 'automategoes.cfg'
-  props = ag.AutomateGoesProperties(filename).getDownload()
+  props = PropertiesManager(AutomateGoesProperties(filename)).get_download()
   def setUp(self):
-    self.downloader = ag.GoesDownloader(self.props, datetime.date(2012,8,9), '')
+    self.downloader = GoesDownloader(self.props, datetime.date(2012,8,9), 'downloads')
     
   def testFindIterating(self):
     d = self.downloader
@@ -31,15 +36,16 @@ class TestGoesDownloader(unittest.TestCase):
     d = self.downloader
     d.download()
     date = d.date
-    exists = lambda path: os.path.exists(path)
+    join = os.path.join
+    exists = os.path.exists
     props = self.props
-    downloads = props['downloads']
+    downloads = props.get_downloads()
     formatter = lambda s,d: d.strftime(s)
     
     for download in downloads:
-      output = download['outputname']
+      output = download.get_outputname()
       output = formatter(output,date)
-      self.assertTrue(exists(output), download['name'])
+      self.assertTrue(exists(join(d.todir,output)), download.get_name())
       
 
 if __name__ == "__main__":

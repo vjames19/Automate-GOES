@@ -11,6 +11,7 @@ import time
 import re
 import urllib2
 from main.remote import FtpMeta
+import main.properties
 log= logging.getLogger("main.automategoes")
 
 class PropertiesJson(dict):
@@ -78,9 +79,10 @@ class AutomateGoesProperties(PropertiesJson):
     
 class GoesDownloader:
   '''
-  GoesDownloader is in charge of downloading all the files specified in the downloadConfig dictionary
+  GoesDownloader is in charge of downloading all the files specified in the DownloadProps
+  object
   
-  Each download should have the following properties:
+  Each download should have the following properties using a get_<propertyname>() method:
     name - A name for the download 
     remotename - name of the file in the web
     outputname - name for the downloaded file
@@ -88,19 +90,10 @@ class GoesDownloader:
     finditerating - true or false if the file must be found changing the last two digits
     dateoffset - offset from the date specified when constructing this object
   '''
-  DIR_URL = 'dirurl'
-  REGEX = 'regex'
-  NAME = 'name'
-  REMOTE_NAME = 'remotename'
-  DATE_OFFSET = 'dateoffset'
-  TRIES ='tries'
-  SECONDS ='seconds'
-  DOWNLOADS = 'downloads'
-  OUTPUT_NAME='outputname'
-  FIND_ITERATING ='finditerating'
-  def __init__(self, props, date, todir=''):
+
+  def __init__(self, downloadprops, date, todir=''):
     self.wget = remote.WebDownload()
-    self.__initializeProps(props)
+    self.__initializeProps(downloadprops)
     self.date = date
     self.todir = todir
     
@@ -117,15 +110,15 @@ class GoesDownloader:
     Processes all the downloads specified in the downloadConfig
     '''
     for download in self.downloads:
-      log.info("Starting download process for: "+ download[self.NAME])
-      tempDate = self.date + datetime.timedelta(download[self.DATE_OFFSET])
+      log.info("Starting download process for: "+ download.get_name())
+      tempDate = self.date + datetime.timedelta(download.get_dateoffset())
       log.info("Date: "+str(tempDate))
       
       #Format the strings using the corresponding date
-      remotedir = self.__formatString(download[self.DIR_URL], tempDate)
+      remotedir = self.__formatString(download.get_remotedir(), tempDate)
       log.info("Remotedir: "+remotedir)
       
-      remoteName = self.__formatString(download[self.REMOTE_NAME], tempDate)
+      remoteName = self.__formatString(download.get_remotename(), tempDate)
       
       #Process regex looking in the web directory for the remote name
 #      if download[self.REGEX]:
@@ -140,7 +133,7 @@ class GoesDownloader:
 #            continue
 #        else:
 #          log.error("Remote Directory doesn't exists: "+remotedir)
-      if download[self.FIND_ITERATING]:
+      if download.get_finditerating():
         remoteName = waitToAppear(self.tries,self.seconds, self.findIterating,remotedir,remoteName )
           
       #Create the absolute url      
@@ -150,18 +143,18 @@ class GoesDownloader:
       #Wait for the file to be there, then download it.
       if waitToAppear(self.tries, self.seconds, self.wget.check_url, absoluteUrl):
         log.info("Downloading...")
-        outputname = self.__formatString(download[self.OUTPUT_NAME], self.date)
+        outputname = self.__formatString(download.get_outputname(), self.date)
         result = self.wget.wget(absoluteUrl, self.todir,outputname)
         log.info("Downloaded: "+ str(result))
       else:
         log.error("Download error the url doesn't exists")
         continue
         
-  def __initializeProps(self, downloadConfig):
+  def __initializeProps(self, props):
     #initializes the downloads list
-    self.downloads =  downloadConfig[self.DOWNLOADS]
-    self.tries = downloadConfig[self.TRIES]
-    self.seconds = downloadConfig[self.SECONDS]
+    self.downloads =  props.get_downloads()
+    self.tries = props.get_tries()
+    self.seconds = props.get_seconds()
     
   def __formatString(self,string, date):
     '''
