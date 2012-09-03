@@ -79,65 +79,65 @@ class PropertiesManager(object):
     self.variables = p.getVariables()
 
   def get_ftp(self):
-    return self.__ftp
+    return self.ftp
 
 
   def get_download(self):
-    return self.__download
+    return self.download
 
 
   def get_email(self):
-    return self.__email
+    return self.email
 
 
   def get_finished(self):
-    return self.__finished
+    return self.finished
 
 
   def get_degrib(self):
-    return self.__degrib
+    return self.degrib
 
 
   def get_general(self):
-    return self.__general
+    return self.general
 
 
   def get_variables(self):
-    return self.__variables
+    return self.variables
 
-class GoesDownloads(object):
-  def __init__(self,downloadConfig):
+class DownloadProps(object):
+  def __init__(self,props):
     self.downloads = []
-    self.decodeDownloads(downloadConfig['downloads'])
-    self.tries = downloadConfig('tries')
-    self.seconds = downloadConfig('seconds')
+    self.decodeDownloads(props['downloads'])
+    self.tries = props['tries']
+    self.seconds = props['seconds']
 
   def get_downloads(self):
-    return self.__downloads
+    return self.downloads
 
 
   def get_tries(self):
-    return self.__tries
+    return self.tries
 
 
   def get_seconds(self):
-    return self.__seconds
+    return self.seconds
 
 
   def set_downloads(self, value):
-    self.__downloads = value
+    self.downloads = value
 
 
   def set_tries(self, value):
-    self.__tries = value
+    self.tries = value
 
 
   def set_seconds(self, value):
-    self.__seconds = value
+    self.seconds = value
   
   def decodeDownloads(self, downloads):
     for download in downloads:
-      self.downloads.append(DownloadProps(download))
+      self.downloads.append(DownloadMeta(download))
 
       
 class FinishedProps(object):
@@ -147,27 +147,27 @@ class FinishedProps(object):
     self.seconds = props['seconds']
 
   def get_filename(self):
-    return self.__filename
+    return self.filename
 
 
   def get_tries(self):
-    return self.__tries
+    return self.tries
 
 
   def get_seconds(self):
-    return self.__seconds
+    return self.seconds
 
 
   def set_filename(self, value):
-    self.__filename = value
+    self.filename = value
 
 
   def set_tries(self, value):
-    self.__tries = value
+    self.tries = value
 
 
   def set_seconds(self, value):
-    self.__seconds = value
+    self.seconds = value
 
 
 class EmailProps(object):
@@ -176,77 +176,86 @@ class EmailProps(object):
     self.to = props ['to']
     self.password = props['password']
 
-  def get_fromaddress(self):
-    return self.__fromaddress
+  def get_from(self):
+    return self.fromaddress
 
 
   def get_to(self):
-    return self.__to
+    return self.to
 
 
   def get_password(self):
-    return self.__password
+    return self.password
 
 
-  def set_fromaddress(self, value):
-    self.__fromaddress = value
+  def set_from(self, value):
+    self.fromaddress = value
 
 
   def set_to(self, value):
-    self.__to = value
+    self.to = value
 
 
   def set_password(self, value):
-    self.__password = value
+    self.password = value
 
        
   
-class DownloadProps(object):
+class DownloadMeta(object):
   def __init__(self, props):
     self.name = props['name']
     self.remotename = props['remotename']
     self.outputname = props['outputname']
-    self.remotdir = props['remotedir']
+    self.remotedir = props['remotedir']
     self.finditerating = props['finditerating']
+    self.dateoffset = props['dateoffset']
+
+  def get_dateoffset(self):
+    return self.dateoffset
+
+  def set_dateoffset(self,value):
+    self.dateoffset = value
+
 
   def get_name(self):
-    return self.__name
+    return self.name
 
 
   def get_remotename(self):
-    return self.__remotename
+    return self.remotename
 
 
   def get_outputname(self):
-    return self.__outputname
+    return self.outputname
 
 
   def get_remotdir(self):
-    return self.__remotdir
+    return self.remotdir
 
 
   def get_finditerating(self):
-    return self.__finditerating
+    return self.finditerating
 
 
   def set_name(self, value):
-    self.__name = value
+    self.name = value
 
 
   def set_remotename(self, value):
-    self.__remotename = value
+    self.remotename = value
 
 
   def set_outputname(self, value):
-    self.__outputname = value
+    self.outputname = value
 
 
   def set_remotdir(self, value):
-    self.__remotdir = value
+    self.remotdir = value
 
 
   def set_finditerating(self, value):
-    self.__finditerating = value
+    self.finditerating = value
+
 
 class DegribVariable(object):
   def __init__(self, variable):
@@ -254,19 +263,19 @@ class DegribVariable(object):
     self.messages = variable['messages']
 
   def get_name(self):
-    return self.__name
+    return self.name
 
 
   def get_messages(self):
-    return self.__messages
+    return self.messages
 
 
   def set_name(self, value):
-    self.__name = value
+    self.name = value
 
 
   def set_messages(self, value):
-    self.__messages = value
+    self.messages = value
 
 
     
@@ -277,11 +286,11 @@ class DegribProps(object):
     self.decodeVariables(props['variables'])
 
   def get_variables(self):
-    return self.__variables
+    return self.variables
 
 
   def set_variables(self, value):
-    self.__variables = value
+    self.variables = value
 
   
   def decodeVariables(self, variables):
@@ -298,43 +307,43 @@ class FtpProps(object):
     self.rootdir = props['rootdir']
 
   def get_host(self):
-    return self.__host
+    return self.host
 
 
   def get_user(self):
-    return self.__user
+    return self.user
 
 
   def get_password(self):
-    return self.__password
+    return self.password
 
 
   def get_port(self):
-    return self.__port
+    return self.port
 
 
   def get_rootdir(self):
-    return self.__rootdir
+    return self.rootdir
 
 
   def set_host(self, value):
-    self.__host = value
+    self.host = value
 
 
   def set_user(self, value):
-    self.__user = value
+    self.user = value
 
 
   def set_password(self, value):
-    self.__password = value
+    self.password = value
 
 
   def set_port(self, value):
-    self.__port = value
+    self.port = value
 
 
   def set_rootdir(self, value):
-    self.__rootdir = value
+    self.rootdir = value
 
     
 

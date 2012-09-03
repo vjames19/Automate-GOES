@@ -98,9 +98,9 @@ class GoesDownloader:
   DOWNLOADS = 'downloads'
   OUTPUT_NAME='outputname'
   FIND_ITERATING ='finditerating'
-  def __init__(self, downloadConfig, date, todir=''):
+  def __init__(self, props, date, todir=''):
     self.wget = remote.WebDownload()
-    self.__initializeProps(downloadConfig)
+    self.__initializeProps(props)
     self.date = date
     self.todir = todir
     

@@ -6,12 +6,14 @@ Created on Sep 2, 2012
 import datetime
 import logging
 import logging.config
-import main.automategoes as ag
+import main.properties as p
 import os
 import unittest
 import urllib2
+from main.properties import *
+from main.automategoes import GoesLinkParser
 
-logconfig = ag.LoggerProperties('log.cfg')
+logconfig = p.LoggerProperties('log.cfg')
 logging.config.dictConfig(logconfig)
 
 
@@ -19,7 +21,7 @@ class TestGoesProperties(unittest.TestCase):
 
     filename = 'automategoes.cfg'
     def setUp(self):
-        self.properties = ag.AutomateGoesProperties(self.filename)
+        self.properties = p.AutomateGoesProperties(self.filename)
 
 
     def tearDown(self):
@@ -42,7 +44,7 @@ class TestLoggerProperties(unittest.TestCase):
   filename = 'log.cfg'
 
   def setUp(self):
-    self.props = ag.LoggerProperties(self.filename)
+    self.props = p.LoggerProperties(self.filename)
 
   def tearDown(self):
     self.props.clear()
@@ -62,7 +64,7 @@ class TestPropertiesJson(unittest.TestCase):
   
   filename = 'automategoes.cfg'
   def setUp(self):
-    self.props = ag.PropertiesJson(self.filename)
+    self.props = p.PropertiesJson(self.filename)
   
   def testIsDict(self):
     props = self.props
@@ -79,7 +81,7 @@ class TestPropertiesJson(unittest.TestCase):
 class TestGoesLinkParser(unittest.TestCase):   
    
   def construct(self,page,target):
-    return ag.GoesLinkParser(page,target)
+    return GoesLinkParser(page,target)
   def setUp(self):
     unittest.TestCase.setUp(self)
      
@@ -94,6 +96,65 @@ class TestGoesLinkParser(unittest.TestCase):
     self.assertEqual(result, test, result)
     print result
     
+
+class TestPropertiesManager(unittest.TestCase):
+
+  def setUp(self):
+    self.props = AutomateGoesProperties('automategoes.cfg')
+    self.man = PropertiesManager(self.props)
+  
+  def generalTest(self,original, test):
+    join = lambda s: 'get_'+s
+    call = lambda obj, attr: getattr(obj,attr)()
+    
+    for key in original.keys():
+      print original[key],call(test,join(key)),key
+      self.assertEqual(original[key],call(test,join(key)),key)
+    
+    
+  def test_getFtp(self):
+    original = self.props.getFtp()
+    test = self.man.get_ftp()
+    self.generalTest(original, test)
+    
+    
+
+  def test_getEmail(self):
+    original = self.props.getEmail()
+    test = self.man.get_email()
+    self.generalTest(original, test)
+    
+  def test_getDownload(self):
+    original = self.props.getDownload()
+    test = self.man.get_download()
+    o = original.pop('downloads')
+    t = test.get_downloads()
+    self.generalTest(original, test)
+    
+    self.assertEqual(len(o), len(t))
+    for i in xrange(0,len(t)):
+      d = t[i].__dict__
+      self.verifyDict(o[i], d)
+    
+      
+  def verifyDict(self,o,t):
+    for key in o:
+      self.assertEqual(o[key],t[key])
+       
+  def test_getVariables(self):
+    self.assertEqual(self.props.getVariables(), self.man.get_variables())
+    
+  def test_getDegrib(self):
+    pass
+  def test_getFinished(self):
+    original = self.props.getFinished()
+    test = self.man.get_finished()
+    self.generalTest(original, test)
+  def test_getGeneral(self):
+    original = self.props.getGeneral()
+    test = self.man.get_general()
+    
+    self.assertEqual(original['goesdir'], test['goesdir'])
 
     
     

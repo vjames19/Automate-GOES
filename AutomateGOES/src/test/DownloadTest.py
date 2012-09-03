@@ -5,7 +5,7 @@ Created on Sep 3, 2012
 '''
 import unittest
 import os
-import main.automategoes as ag
+import main.automategoes as p
 import datetime
 
 
