@@ -10,6 +10,7 @@ import urlparse
 import time
 import re
 import urllib2
+from main.remote import FtpMeta
 log= logging.getLogger("main.automategoes")
 
 class PropertiesJson(dict):
@@ -189,6 +190,11 @@ class GoesDownloader:
         number+=1
     log.warning("Coudn't find a link")
     return None
+  
+
+class GoesUploader:
+  def __init__(self, ftpConfig):
+    pass
 
   
 class GoesLinkParser:
