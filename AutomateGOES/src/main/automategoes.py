@@ -204,12 +204,17 @@ class GoesUploader:
     """
     
     uploads = self.findFiles(pattern, directory)
+    logging.debug("Uploads: "+str(uploads))
     
     if self.ftp.isClosed():
       self.ftp = FtpUpload(self.ftpmeta)
     
     remotedir = urlparse.urljoin(self.rootdir, variable)
-    self.ftp.wput(remotedir, uploads)    
+    self.ftp.wput(remotedir, uploads)
+    
+  def close(self):
+    if not self.ftp.isClosed():
+      self.ftp.close()
 
 
       

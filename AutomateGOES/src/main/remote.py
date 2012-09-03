@@ -11,8 +11,8 @@ import logging
 from ftplib import FTP
 
 #setup handler
-logger = logging.getLogger('main.remote')
-logger.addHandler(logging.NullHandler())
+log = logging.getLogger('main.remote')
+log.addHandler(logging.NullHandler())
 
 class WebDownload:
   """
@@ -42,9 +42,9 @@ class WebDownload:
     """
     if outputFileName == '':
       outputFileName = url.split('/')[-1]
-      
+      log.debug("Stripped outputfilename: "+outputFileName)
     path = os.path.join(todir,outputFileName)
-    logger.info("url:%s targetDir:%s" % (url,path))
+    log.info("url:%s targetDir:%s" % (url,path))
     return urllib.urlretrieve(url,path)
   
   def urlopen(self, url):
@@ -129,12 +129,29 @@ class FtpUpload:
                     [(remotefilename,localfilename),...]
     """
     if remoteDir != '':
-      self.ftp.cwd(remoteDir)
-    logger.info("CWD:"+remoteDir)
+      try:
+        self.ftp.cwd(remoteDir)
+        log.debug("CWD:"+remoteDir)
+      except:
+        log.error("Supplied remotedir %s doesn't exists" % remoteDir)
+        return
     
     for remotefilename, localfilename in filenamesTuple:
-      self.ftp.storbinary("STOR "+remotefilename,open(localfilename,'rb'))
-      logger.info("Stored "+remotefilename)
+      try:
+        log.info('Going to upload %s...' %remotefilename)
+        self.__connectIfNeeded()
+        self.ftp.storbinary("STOR "+remotefilename,open(localfilename,'rb'))
+        log.info("Stored "+remotefilename)
+      except:
+        log.error("Failed to store:"+remotefilename)
+  
+  def __connectIfNeeded(self):
+    """
+    Sometimes the connection closes and needs to be reopened.
+    """
+    if self.isClosed():
+      self.__constructFtp()
+      log.info("Connecting again to the ftp server...")
       
   def dirExists(self, remoteDir):
     """
@@ -149,6 +166,9 @@ class FtpUpload:
       return False
     
   def isClosed(self):
+    """
+    Verifies if the connection is closed
+    """
     try:
       self.ftp.pwd()
       return False
