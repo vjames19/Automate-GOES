@@ -4,10 +4,19 @@ Created on Sep 3, 2012
 @author: TheZen
 '''
 import datetime
+import logging
+print __name__
+logger = logging.getLogger(__name__)
+
 class PropertiesJson(dict):
   def __init__(self,filename):
     import json
-    self.update( json.load(open(filename,'r')))
+    try:
+      self.update( json.load(open(filename,'r')))
+    except Exception,e:
+      logger.error("Error reading file %s. %s" %(filename, str(e)))
+      raise e
+    
     
   def isDict(self, key):
     r = self.get(key)
@@ -24,17 +33,18 @@ class PropertiesJson(dict):
 class LoggerProperties(PropertiesJson):
   def __init__(self,filename):
     PropertiesJson.__init__(self, filename)
-    handlers = self['handlers']
-    filehandler = handlers.get('file')
-    if filehandler:
-      filename = filehandler.get('filename')
-      if filename:
-        today = datetime.date.today()
-        underbar = filename.index('_')
-        dot = filename.index('.')
-        fileformat = filename[underbar:dot]
-        filename = filename[:underbar]+today.strftime(fileformat)+filename[dot:]
-        filehandler['filename'] = filename
+    handlers = self.get('handlers')
+    if handlers:
+      filehandler = handlers.get('file')
+      if filehandler:
+        filename = filehandler.get('filename')
+        if filename:
+          today = datetime.date.today()
+          underbar = filename.index('_')
+          dot = filename.index('.')
+          fileformat = filename[underbar:dot]
+          filename = filename[:underbar]+today.strftime(fileformat)+filename[dot:]
+          filehandler['filename'] = filename
         
 class AutomateGoesProperties(PropertiesJson):
   '''
@@ -68,14 +78,14 @@ class AutomateGoesProperties(PropertiesJson):
     return self['variables']
   
 class PropertiesManager(object):
-  def __init__(self,goesprops):
-    p = goesprops
+  def __init__(self,automateGoesProps):
+    p = automateGoesProps
     self.ftp = FtpProps(p.getFtp())
     self.download = DownloadProps(p.getDownload())
     self.email = EmailProps(p.getEmail())
     self.finished = FinishedProps(p.getFinished())
     self.degrib = DegribProps(p.getDegrib())
-    self.general = p.getGeneral()
+    self.general = GeneralProps(p.getGeneral())
     self.variables = p.getVariables()
 
   def get_ftp(self):
@@ -106,11 +116,11 @@ class PropertiesManager(object):
     return self.variables
 
 class DownloadProps(object):
-  def __init__(self,downloadprops):
+  def __init__(self,props):
     self.downloads = []
-    self.decodeDownloads(downloadprops['downloads'])
-    self.tries = downloadprops['tries']
-    self.seconds = downloadprops['seconds']
+    self.__initDownloads(props['downloads'])
+    self.tries = props['tries']
+    self.seconds = props['seconds']
 
   def get_downloads(self):
     return self.downloads
@@ -135,16 +145,16 @@ class DownloadProps(object):
   def set_seconds(self, value):
     self.seconds = value
   
-  def decodeDownloads(self, downloads):
+  def __initDownloads(self, downloads):
     for download in downloads:
       self.downloads.append(DownloadMeta(download))
 
       
 class FinishedProps(object):
-  def __init__(self,downloadprops):
-    self.filename = downloadprops['filename']
-    self.tries = downloadprops['tries']
-    self.seconds = downloadprops['seconds']
+  def __init__(self,props):
+    self.filename = props['filename']
+    self.tries = props['tries']
+    self.seconds = props['seconds']
 
   def get_filename(self):
     return self.filename
@@ -171,10 +181,10 @@ class FinishedProps(object):
 
 
 class EmailProps(object):
-  def __init__(self, downloadprops):
-    self.fromaddress = downloadprops['from']
-    self.to = downloadprops ['to']
-    self.password = downloadprops['password']
+  def __init__(self, props):
+    self.fromaddress = props['from']
+    self.to = props ['to']
+    self.password = props['password']
 
   def get_from(self):
     return self.fromaddress
@@ -203,7 +213,7 @@ class EmailProps(object):
   
 class DownloadMeta(object):
   def __init__(self, downloadprops):
-    self.name = downloadprops['name']
+    self.__name = downloadprops['name']
     self.remotename = downloadprops['remotename']
     self.outputname = downloadprops['outputname']
     self.remotedir = downloadprops['remotedir']
@@ -218,7 +228,7 @@ class DownloadMeta(object):
 
 
   def get_name(self):
-    return self.name
+    return self.__name
 
 
   def get_remotename(self):
@@ -238,7 +248,7 @@ class DownloadMeta(object):
 
 
   def set_name(self, value):
-    self.name = value
+    self.__name = value
 
 
   def set_remotename(self, value):
@@ -259,23 +269,33 @@ class DownloadMeta(object):
 
 class DegribVariable(object):
   def __init__(self, variable):
-    self.name = variable['name']
-    self.messages = variable['messages']
+    self.__name = variable['name']
+    self.__messages = variable['messages']
+    self.__output = variable['output']
+
+  def get_output(self):
+    return self.__output
+
+
+  def set_output(self, value):
+    self.__output = value
+
 
   def get_name(self):
-    return self.name
+    return self.__name
 
 
   def get_messages(self):
-    return self.messages
+    return self.__messages
 
 
   def set_name(self, value):
-    self.name = value
+    self.__name = value
 
 
   def set_messages(self, value):
-    self.messages = value
+    self.__messages = value
+
 
 
     
@@ -283,7 +303,7 @@ class DegribVariable(object):
 class DegribProps(object):
   def __init__(self, downloadprops):
     self.variables = []
-    self.decodeVariables(downloadprops['variables'])
+    self.__initiDegribVariables(downloadprops['variables'])
 
   def get_variables(self):
     return self.variables
@@ -293,18 +313,18 @@ class DegribProps(object):
     self.variables = value
 
   
-  def decodeVariables(self, variables):
+  def __initiDegribVariables(self, variables):
     for variable in variables:
       self.variables.append(DegribVariable(variable))
       
 
 class FtpProps(object):
-  def __init__(self, downloadprops):
-    self.host = downloadprops['host']
-    self.user= downloadprops['user']
-    self.password = downloadprops['password']
-    self.port = downloadprops['port']
-    self.rootdir = downloadprops['rootdir']
+  def __init__(self, props):
+    self.host = props['host']
+    self.user= props['user']
+    self.password = props['password']
+    self.port = props['port']
+    self.rootdir = props['rootdir']
 
   def get_host(self):
     return self.host
@@ -345,8 +365,39 @@ class FtpProps(object):
   def set_rootdir(self, value):
     self.rootdir = value
 
-    
 
+class GeneralProps(object):
+  def __init__(self, props):
+    self.__goesdir = props['goesdir']
+    self.__logdir = props['logdir']
+    self.__matlab = props['matlab']
+
+  def get_goesdir(self):
+    return self.__goesdir
+
+
+  def get_logdir(self):
+    return self.__logdir
+
+
+  def get_matlab(self):
+    return self.__matlab
+
+
+  def set_goesdir(self, value):
+    self.__goesdir = value
+
+
+  def set_logdir(self, value):
+    self.__logdir = value
+
+
+  def set_matlab(self, value):
+    self.__matlab = value
+
+if __name__ == "__main__":
+  props = AutomateGoesProperties('automategoes.cfg')
+  print props.getFtp()
 
 
 

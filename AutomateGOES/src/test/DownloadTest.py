@@ -3,19 +3,21 @@ Created on Sep 3, 2012
 
 @author: TheZen
 '''
-import unittest
-import os
-import logging.config
-from main.properties import *
 from main.automategoes import GoesDownloader
+from main.properties import *
 import datetime
-
+import logging.config
+import os
+import unittest
 logconfig = LoggerProperties('log.cfg')
 logging.config.dictConfig(logconfig)
 
 
+
+
+
 class TestGoesDownloader(unittest.TestCase):
-  filename = 'automategoes.cfg'
+  filename = 'automategoes.cfgasa'
   props = PropertiesManager(AutomateGoesProperties(filename)).get_download()
   def setUp(self):
     self.downloader = GoesDownloader(self.props, datetime.date(2012,8,9), 'downloads')
