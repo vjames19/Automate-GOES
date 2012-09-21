@@ -5,22 +5,21 @@ Created on Sep 1, 2012
 
 Module contains the high level classes needed to automate the process
 '''
+from main.properties import LoggerProperties, PropertiesJson
+from main.remote import FtpMeta, FtpUpload, WputFtpUpload
 import datetime
 import logging
-import remote
-import urlparse
-import time
-import re
-import urllib2
-from main.remote import FtpMeta, FtpUpload, WputFtpUpload
 import os
-from main.properties import LoggerProperties, PropertiesJson
+import re
+import remote
+import urllib2
+import urlparse
 import util
 logger= logging.getLogger(__name__)
 
 
     
-class GoesDownloader:
+class GoesDownloader(object):
   '''
   GoesDownloader is in charge of downloading all the files specified in the DownloadProps
   object
@@ -130,7 +129,7 @@ class GoesDownloader:
     return None
   
 
-class GoesUploader:
+class GoesUploader(object):
   def __init__(self, ftpProps):
     f = ftpProps
     self.ftpmeta = FtpMeta(f.get_host(), f.get_user(), f.get_password(), f.get_port())
@@ -179,12 +178,13 @@ class GoesWputUploader(object):
     uploads = util.findFiles(pattern, directory)
     uploads = map(os.path.basename, uploads)
     remotedir = urlparse.urljoin(self.rootdir, variable)
+    logger.debug("Remotedir:" + remotedir)
     self.ftp.wput(directory, remotedir, uploads)
     
     
 
      
-class GoesLinkParser:
+class GoesLinkParser(object):
   '''
   Class used to parse the links out of html pages and look for a specific target using regular expressions
   '''
@@ -211,7 +211,7 @@ class GoesLinkParser:
     logger.warning("Couldn't find a match")
     return None
 
-class GoesDegribber:
+class GoesDegribber(object):
   
   COMMAND = 'degrib %(infile)s -out %(output)s -C -msg %(messagenumber)s -Csv -Unit m -Decimal 2'
    
@@ -254,7 +254,17 @@ class GoesDegribber:
       else:
         logger.debug(line)
 
-class DirectoryManager:
+class DirectoryManager(object):
+  """
+  Manages the directory needed by the project. It also has methods for getting, the following dirs:
+    root,LOGS,INPUT and output.
+  Inside the rootdir it will make
+  ${rootdir}/
+              LOGS/ all the logs go here
+              %Y/%m/%d/  tree for the date specified. All the raw data goes here.
+                        INPUT/ All the input files go here, .mat files for matlab to use
+                        OUTPUT/ All of the output files goes here
+  """
   def __init__(self, generalProps, date):
     self.__rootdir = generalProps.get_goesdir()
     self.__logdir = generalProps.get_logdir()
@@ -274,7 +284,7 @@ class DirectoryManager:
     for directory in dirs:
       self.mk_dir(directory)
       
-  def mk_dir(self, directory):
+  def mk_dirs(self, directory):
     try:
       os.makedirs(directory)
       logger.info("Made directory: %s" % directory)
