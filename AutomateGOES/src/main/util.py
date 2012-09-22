@@ -23,7 +23,7 @@ def waitToAppear(tries, seconds, conditionalFunc, *conditionalArgs):
   while i <=tries:
     result = conditionalFunc(*conditionalArgs)
     if result:
-      logger.info("exists")
+      logger.debug("Waited file exists")
       return result
     else:
       time.sleep(seconds)
@@ -34,9 +34,11 @@ def waitToAppear(tries, seconds, conditionalFunc, *conditionalArgs):
 
 def getLogMessage(logFilePath):
   """
-  Gets the specified logs message and returns as a string
+  Gets the specified logs message and returns as a string.
+  If the log file is not found then it will return the following string
+  log path: %s is not a valid file
   """
-  if os.path.exists(logFilePath) and os.path.isfile(logFilePath):
+  if os.path.isfile(logFilePath):
     handle = open(logFilePath, 'r')
     message =''
     for line in handle:
@@ -50,13 +52,11 @@ def getLogMessage(logFilePath):
 def findFiles(pattern, directory):
     """
     Search the specified directory for the the pattern
-    returns -> A list of tuples containing (filename, filepath)
-    filepath: the whole path
-    filename: the name of the filepath
+    returns -> A list of all the files that match the pattern.
     """ 
     path = os.path.join(directory,pattern)
     ls = glob.glob(path)
-    logging.info("Found files: "+ str(ls))
+    logging.debug("Found files: "+ str(ls))
     return ls
   
     
