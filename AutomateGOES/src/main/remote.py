@@ -12,12 +12,11 @@ import logging
 from ftplib import FTP
 
 #setup handler
-logger = logging.getLogger('main.remote')
-logger.addHandler(logging.NullHandler())
+logger = logging.getLogger(__name__)
 
-class WebDownload:
+class WebDownload(object):
   """
-  Represents a download through HTTP
+  Lets you download a page or file from a url
   """
 
   def check_url(self, url):
@@ -55,9 +54,10 @@ class WebDownload:
     return urllib2.urlopen(url)
 
 
-class FtpMeta:
+class FtpMeta(object):
   """
-  Meta information for the FTP connection
+  Meta information for the FTP connection:
+    host,user,password, port.
   """
   def __init__(self, host, user, password, port=21):
     self.host = host
@@ -92,7 +92,7 @@ class FtpMeta:
 
 
 
-class FtpUpload:
+class FtpUpload(object):
   """
   Class used to upload files into an ftpserver
 
@@ -182,8 +182,9 @@ class FtpUpload:
     return self.pwd()
   def changeDir(self, dirname):
     self.ftp.cwd(dirname)
-    
-class WputFtpUpload:
+
+
+class WputFtpUpload(object):
   """
   Uploads files using wput command
   
@@ -212,6 +213,8 @@ class WputFtpUpload:
     When the method is finished the working dir will change to the initial working directory, that was when the class was instantiated
  
     """
+    if len(filenames) == 0:
+      return 
     absoluteUrl = urlparse.urljoin(self.ftpUrl, remotedir)
     logger.info("absolote url: %s" %absoluteUrl)
     os.chdir(filedir)
@@ -221,9 +224,10 @@ class WputFtpUpload:
     logger.debug("cmds: %s" %cmds)
     strcmd = " ".join(cmds)
     logger.debug(strcmd)
-    logger.debug("cwd:%s"%os.getcwd())
-    output = os.popen(strcmd)
-    self.__getErrors(output)
+    logger.debug("Current working dir:%s"%os.getcwd())
+    os.system(strcmd)
+#    output = os.popen(strcmd)
+#    self.__getErrors(output)
     os.chdir(self.initialWorkingDir)
 
   def __getErrors(self, outputFile):
